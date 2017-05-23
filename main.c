@@ -15,8 +15,6 @@
 #define TIMEOUT       1000
 
 #define NUM_FILES     10
-#define BASE_PATH     "/tmp/fooctr_"
-#define BASE_PATH_LEN 12
 
 #define WRITE_SIZE    100
 
@@ -76,7 +74,7 @@ int count(void *arg) {
 
     // Print results
     struct periodic_counter *prev = &counters[prev_counter];
-    printf("Counter value: %u\n", prev->requests);
+    printf("%u\n", prev->requests);
 
     // Clear counter
     init_counter(prev);
@@ -85,7 +83,12 @@ int count(void *arg) {
   return 0;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
+  if (argc != 2) {
+    printf("usage: %s file_template", argv[0]);
+    exit(1);
+  }
 
   // Init stuff.
   atomic_init(&done, false);
@@ -97,10 +100,11 @@ int main() {
   srand((unsigned int) time(NULL));
 
   // Open files
+  uint32_t base_path_len = (uint32_t) strlen(argv[1]);
   for (i = 0; i < NUM_FILES; ++i) {
     char path[100];
-    memcpy(&path[0], BASE_PATH, BASE_PATH_LEN);
-    snprintf(&path[BASE_PATH_LEN], 10, "%" PRIu32, i);
+    memcpy(&path[0], argv[1], base_path_len);
+    snprintf(&path[base_path_len], 10, "%" PRIu32, i);
     printf("File %u: %s\n", i, (char *) &path);
     files[i] = open((char *) &path, O_CREAT | O_WRONLY | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     assert(files[i] != -1);
